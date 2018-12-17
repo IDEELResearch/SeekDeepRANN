@@ -1,6 +1,6 @@
-Package: NFBtools
+Package: SeekDeepRANN
 Type: Package
-Title: Miscellaneous tools for the IDEEL group
+Title: Basic Tool for Annotating the Output of SeekDeep for Exonic Regions
 Version: 0.1.0
 Authors@R: c(
     person(c("Nicholas", "F"), "Brazeau", role = c("aut", "cre"), email = "nbrazeau@med.unc.edu")
@@ -15,18 +15,9 @@ bioc_packages: BiocInstaller
 Imports:
     tidyverse,
     stringr,
-    zoo,
     parallel,
     RColorBrewer,
-    viridis,
-    prettydoc,
-    grid,
-    gridExtra,
-    gtable,
-    ggpubr,
-    vcfR,
     seqinr,
-    Rcpp
 biocViews:
     Biostrings
 Suggests:
