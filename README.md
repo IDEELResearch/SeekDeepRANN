@@ -1,4 +1,4 @@
-# NFBtools
+# SeekDeepRANN
 [![Travis-CI Build Status](https://travis-ci.org/nickbrazeau/NFBtools.svg?branch=master)](https://travis-ci.org/nickbrazeau/NFBtools)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/nickbrazeau/NFBtools?branch=master&svg=true)](https://ci.appveyor.com/project/nickbrazeau/NFBtools)
 [![Coverage Status](https://img.shields.io/codecov/c/github/nickbrazeau/NFBtools/master.svg)](https://codecov.io/github/nickbrazeau/NFBtools?branch=master)
@@ -16,5 +16,5 @@ install.packages("devtools")
 
 Then download and build _NFBtools_ from Github with: 
 ``` r
-devtools::install_github("nickbrazeau/NFBtools")
+devtools::install_github("nickbrazeau/SeekDeepRANN")
 ```
