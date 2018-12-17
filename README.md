@@ -4,7 +4,7 @@
 [![Coverage Status](https://img.shields.io/codecov/c/github/nickbrazeau/NFBtools/master.svg)](https://codecov.io/github/nickbrazeau/NFBtools?branch=master)
 
 ## Purpose 
-To annotate the output from `[SeekDeep](http://baileylab.umassmed.edu/SeekDeep/)` within exonic regions. 
+To annotate the output from _[SeekDeep](http://baileylab.umassmed.edu/SeekDeep/)_ within exonic regions. 
   
 
 ## Installation 
