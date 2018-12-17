@@ -1,20 +1,5 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-sudo: true
+sudo: false
 cache: packages
-use_bioc: true
-r: bioc-devel
-warnings_are_errors: false
-
-bioc_required: true
-
-after_success:
-  - Rscript -e 'covr::codecov()'
-
-notifications:
-  email:
-    recipients:
-      - nbrazeau@med.unc.edu
-    on_success: change
-    on_failure: change
