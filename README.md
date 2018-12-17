@@ -4,17 +4,16 @@
 [![Coverage Status](https://img.shields.io/codecov/c/github/nickbrazeau/NFBtools/master.svg)](https://codecov.io/github/nickbrazeau/NFBtools?branch=master)
 
 ## Purpose 
-  
-R package that contains miscellanious tools used by the IDEEL@UNC group and developed by Nick Brazeau. **Please use at your own risk as corner cases will often have not been vetted.**
+To annotate the output from `[SeekDeep](http://baileylab.umassmed.edu/SeekDeep/)` within exonic regions. 
   
 
 ## Installation 
-To install the current version of _NFBtools_, first ensure that you have the R-package _devtools_:
+To install the current version of _SeekDeepRANN_, first ensure that you have the R-package _devtools_:
 ``` r
 install.packages("devtools")
 ```
 
-Then download and build _NFBtools_ from Github with: 
+Then download and build _SeekDeepRANN_ from Github with: 
 ``` r
 devtools::install_github("nickbrazeau/SeekDeepRANN")
 ```
