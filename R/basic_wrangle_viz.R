@@ -33,7 +33,7 @@ SeekDeepOutput2SeekDeepDat <- function(input, readcountcutoff = 0){
     stop("There was an error filtering the reads. Contact the developer")
   }
 
-  input_simp <- as.tibble(input_simp)
+  input_simp <- tibble::as.tibble(input_simp)
   class(input_simp) <- append(  class(input_simp) , "SeekDeepDat" )
   return(input_simp)
 

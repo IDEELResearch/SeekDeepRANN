@@ -113,7 +113,7 @@ SeekDeepDat2ExonAnnotation <- function(input,
 
     # Identify First base in Amplicon  from "global" Gene Fasta
     RefSeqGenePos <- Biostrings::matchPattern(pattern = Pf3D7haplotypeRef[[1]],
-                                              subject = DNAString(seqinr::c2s(gffseq[[1]]))) # find pos of amplicon in gene
+                                              subject = Biostrings::DNAString(seqinr::c2s(gffseq[[1]]))) # find pos of amplicon in gene
 
 
     # find starting gene pos
