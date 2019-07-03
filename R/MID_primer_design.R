@@ -93,7 +93,7 @@ MIDPrimerFinder <- function(design_fasta = NULL,
 
   while( length(finalMIDs) < n ){
 
-    propMIDs <- replicate(n, NFBtools::MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
+    propMIDs <- replicate(n, MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
     propMIDs <- c(propMIDs, currMIDs)
 
 
