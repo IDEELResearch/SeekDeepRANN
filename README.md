@@ -14,5 +14,5 @@ install.packages("devtools")
 
 Then download and build _SeekDeepRANN_ from Github with: 
 ``` r
-devtools::install_github("nickbrazeau/SeekDeepRANN")
+devtools::install_github("IDEELResearch/SeekDeepRANN")
 ```
