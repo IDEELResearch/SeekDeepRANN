@@ -1,15 +1,14 @@
-# MID
-# not exported
-
+#' @export
 MIDmaker <- function(length, homopolymercutoff){
 
   MID <- paste0(c(sample(x=c("C","G"), size=1), sample(x=c("C","G", "A", "T"), size=length-1, replace = T)), collapse="") # can't start with A or T
-
-  while(max(unlist(parallel::mclapply(c("A", "C", "T", "G"), function(x){longestConsecutive(MID, x)}))) >= homopolymercutoff | # avoid homopolymers
-        length(Biostrings::findPalindromes(Biostrings::BString(MID), min.armlength=2)) != 0 # avoid palindromes
-  ){
+  while(
+    any( lapply(c("A", "C", "G", "T"), function(x){ ( Biostrings::longestConsecutive(MID, x) ) }) >= homopolymercutoff ) |
+    length( Biostrings::findPalindromes(Biostrings::BString(MID), min.armlength=2)@ranges ) != 0
+    ) {
     MID <- paste0(c(sample(x=c("C","G"), size=1), sample(x=c("C","G", "A", "T"), size=length-1, replace = T)), collapse="")
   }
+
 
   return(MID)
 
@@ -94,7 +93,7 @@ MIDPrimerFinder <- function(design_fasta = NULL,
 
   while( length(finalMIDs) < n ){
 
-    propMIDs <- replicate((n - length(finalMIDs)), MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
+    propMIDs <- replicate((n - length(finalMIDs)), SeekDeepRANN::MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
 
 
     # housekeeping for prop checks
@@ -108,19 +107,19 @@ MIDPrimerFinder <- function(design_fasta = NULL,
     while( sum(rev_culprits) > 0 | sum(ot_cultprits) > 0 | sum(dup_culprits) > 0 | sum(failed_culprits) > 0){
 
       if(sum(rev_culprits) > 0){
-        propMIDs[rev_culprits] <- replicate(sum(rev_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
+        propMIDs[rev_culprits] <- replicate(sum(rev_culprits), SeekDeepRANN::MIDmaker(MIDlength, MIDhomopolymerallowance))
       }
 
       if(sum(ot_cultprits) > 0){
-        propMIDs[ot_cultprits] <- replicate(sum(ot_cultprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
+        propMIDs[ot_cultprits] <- replicate(sum(ot_cultprits), SeekDeepRANN::MIDmaker(MIDlength, MIDhomopolymerallowance))
       }
 
       if(sum(dup_culprits) > 0){
-        propMIDs[dup_culprits] <- replicate(sum(dup_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
+        propMIDs[dup_culprits] <- replicate(sum(dup_culprits), SeekDeepRANN::MIDmaker(MIDlength, MIDhomopolymerallowance))
       }
 
       if(sum(failed_culprits) > 0){
-        propMIDs[failed_culprits] <- replicate(sum(failed_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
+        propMIDs[failed_culprits] <- replicate(sum(failed_culprits), SeekDeepRANN::MIDmaker(MIDlength, MIDhomopolymerallowance))
       }
 
       # housekeeping for CANDIDATE checks
@@ -155,7 +154,8 @@ MIDPrimerFinder <- function(design_fasta = NULL,
     finalMIDs <- c(passedMIDs, finalMIDs)
 
     # update user
-    cat(paste0("There are ", int, "MIDs in the final set at iteration ", i, "\n ------- \n"))
+    cat(paste0("There are ", length(finalMIDs), " MIDs in the final set at iteration ", int, "\n ------- \n"))
+    int <- int + 1
 
   }
 
