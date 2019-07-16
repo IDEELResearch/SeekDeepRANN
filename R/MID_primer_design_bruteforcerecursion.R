@@ -6,7 +6,7 @@ MIDmaker <- function(length, homopolymercutoff){
   MID <- paste0(c(sample(x=c("C","G"), size=1), sample(x=c("C","G", "A", "T"), size=length-1, replace = T)), collapse="") # can't start with A or T
 
   while(max(unlist(parallel::mclapply(c("A", "C", "T", "G"), function(x){longestConsecutive(MID, x)}))) >= homopolymercutoff | # avoid homopolymers
-        length(findPalindromes(BString(MID), min.armlength=2)) != 0 # avoid palindromes
+        length(Biostrings::findPalindromes(Biostrings::BString(MID), min.armlength=2)) != 0 # avoid palindromes
   ){
     MID <- paste0(c(sample(x=c("C","G"), size=1), sample(x=c("C","G", "A", "T"), size=length-1, replace = T)), collapse="")
   }
@@ -26,7 +26,8 @@ MIDmaker <- function(length, homopolymercutoff){
 #'
 #' @param design_fasta is expected to have the forward, reverse, and target gene in it. Must have `forward` and `reverse` in the contig names for the forward and reverse primers
 #' @param MID2targetmismatchesAllowed is the number of base-pair mismatches allowed in the MID before it would bind to ANY place on the target gene
-
+#' @importFrom magrittr %>%
+#' @export
 
 MIDPrimerFinder <- function(design_fasta = NULL,
                             MID2MIDmatchesAllowed = NULL,
@@ -86,25 +87,25 @@ MIDPrimerFinder <- function(design_fasta = NULL,
 
   # START
   finalMIDs <- NULL # init N
-  currMIDs <- NULL # init
+  failedMIDs <- NULL
   n <- MIDnum # init N
   int <- 1 # housekeeping
 
 
   while( length(finalMIDs) < n ){
 
-    propMIDs <- replicate(n, NFBtools::MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
-    propMIDs <- c(propMIDs, currMIDs)
+    propMIDs <- replicate((n - length(finalMIDs)), MIDmaker(MIDlength, MIDhomopolymerallowance)) # init
 
 
-    # housekeeping for INIT checks
+    # housekeeping for prop checks
     rev_culprits <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(propMIDs))) %in% as.character(Biostrings::DNAStringSet(propMIDs))  # catch any reverse complements
     ot_cultprits <- c( sapply(propMIDs, function(x){Biostrings::vcountPattern(x, tg, max.mismatch = MID2targetmismatchesAllowed) }) > 0 )  # catch overlap of MIDs with target sequence
     dup_culprits <- duplicated(propMIDs) # catch duplicated MIDs
+    failed_culprits <- propMIDs %in% failedMIDs
 
 
     # repropose culprits
-    while( sum(rev_culprits) > 0 | sum(ot_cultprits) > 0 | sum(dup_culprits) > 0){
+    while( sum(rev_culprits) > 0 | sum(ot_cultprits) > 0 | sum(dup_culprits) > 0 | sum(failed_culprits) > 0){
 
       if(sum(rev_culprits) > 0){
         propMIDs[rev_culprits] <- replicate(sum(rev_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
@@ -118,10 +119,15 @@ MIDPrimerFinder <- function(design_fasta = NULL,
         propMIDs[dup_culprits] <- replicate(sum(dup_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
       }
 
+      if(sum(failed_culprits) > 0){
+        propMIDs[failed_culprits] <- replicate(sum(failed_culprits), MIDmaker(MIDlength, MIDhomopolymerallowance))
+      }
+
       # housekeeping for CANDIDATE checks
       rev_culprits <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(propMIDs))) %in% as.character(Biostrings::DNAStringSet(propMIDs))  # catch any reverse complements
       ot_cultprits <- c( sapply(propMIDs, function(x){Biostrings::vcountPattern(x, tg, max.mismatch = MID2targetmismatchesAllowed) }) > 0 )  # catch overlap of MIDs with target sequence
       dup_culprits <- duplicated(propMIDs) # catch duplicated MIDs
+      failed_culprits <- propMIDs %in% failedMIDs
       # ^ note above is strictly for readability and not memory. I would call this not-best-practice, as it would be easier to evaluate the condition on the fly w/in the while loop...but for clarity
 
 
@@ -136,31 +142,22 @@ MIDPrimerFinder <- function(design_fasta = NULL,
     pairs <- t(combn(propMIDs, m=2)) # choose 2
     pairs_list <- split(pairs, seq(nrow(pairs)))
     pairs_list_ret <- parallel::mclapply(pairs_list, function(x){stringdist::stringdistmatrix(x[1], x[2], method = c("hamming"))})
-    pairs_list_ret <- tibble::tibble(primer = c(pairs[,1], pairs[,2]), Hdist = rep(unlist(pairs_list_ret),2)) # TODO sloppy
 
-    MIDret <- pairs_list_ret %>%
-      dplyr::group_by(primer) %>%
-      dplyr::summarise(Hdist=min(Hdist))
+    mid.dists.init <- tibble::tibble(primer = c(pairs[,1], pairs[,2]), Hdist = rep(unlist(pairs_list_ret),2)) # TODO sloppy
 
-    # update MID proposals
-    if(min(MIDret$Hdist) <= MIDlength-MID2MIDmatchesAllowed){
-      # Use distances as weights to fine tune the number of MIDs to keep
-      keep <- floor( runif( n = 1, min = MIDnum*sum(MIDret$Hdist)/(nrow(MIDret)*MIDlength), max =  MIDnum - 1 ) ) # - 1 at end, so all propose
-      # Standardize to length and then select those MIDs that have the best distances so far
-      currMIDs <- sample(MIDret$primer, size = keep, prob = MIDret$Hdist/MIDlength)
-      # update N for propsoal
-      n <- MIDnum - length(currMIDs)
+    # find primers that had distance metrics above MID2MIDmatches for all MIDs currently in set
+    # and keep failed MIDs so we don't waste time looking there anymore in our state space
+    failedMIDs <- c(failedMIDs, mid.dists.init$primer[ mid.dists.init$Hdist < MIDlength-MID2MIDmatchesAllowed ])
+    failedMIDs <- failedMIDs[!duplicated(failedMIDs)]
 
-      # housekeeping
-      int <- int + 1
+     # find passed MIDs
+    passedMIDs <- propMIDs[! propMIDs %in% failedMIDs]
 
-    } else {
-
-      finalMIDs <- MIDret$primer
-
-    }
+    finalMIDs <- c(passedMIDs, finalMIDs)
 
   }
+
+
 
   ret <- list(finalMIDs = finalMIDs,
               primerinfo = primerinfo,
