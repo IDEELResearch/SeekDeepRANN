@@ -137,15 +137,19 @@ MIDPrimerFinder <- function(design_fasta = NULL,
 
 
     # get pairs and pair.list
-    pairs <- t(combn(propMIDs, m=2)) # choose 2
+    # have to inlclude both prop MIDs and already selected MIDs (passed previousl caveats -- note if prop is identical/duplicated to final, then it will have no distance and will be excluded)
+    pairs <- t(combn(c(finalMIDs, propMIDs), m=2)) # choose 2
     pairs_list <- split(pairs, seq(nrow(pairs)))
     pairs_list_ret <- parallel::mclapply(pairs_list, function(x){stringdist::stringdistmatrix(x[1], x[2], method = c("hamming"))})
 
     mid.dists.init <- tibble::tibble(primer = c(pairs[,1], pairs[,2]), Hdist = rep(unlist(pairs_list_ret),2)) # TODO sloppy
 
     # find primers that had distance metrics above MID2MIDmatches for all MIDs currently in set
+    prop_finalMIDs.too.similair <- mid.dists.init$primer[ mid.dists.init$Hdist < MIDlength-MID2MIDmatchesAllowed ]
+    # now determine which primer was proposal versus current (so we don't keep resetting)
+    prop_finalMIDs.too.similair <- prop_finalMIDs.too.similair[ prop_finalMIDs.too.similair %in% propMIDs ]
     # and keep failed MIDs so we don't waste time looking there anymore in our state space
-    failedMIDs <- c(failedMIDs, mid.dists.init$primer[ mid.dists.init$Hdist < MIDlength-MID2MIDmatchesAllowed ])
+    failedMIDs <- c(failedMIDs, prop_finalMIDs.too.similair)
     failedMIDs <- failedMIDs[!duplicated(failedMIDs)]
 
      # find passed MIDs
