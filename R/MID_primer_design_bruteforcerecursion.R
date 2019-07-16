@@ -137,7 +137,6 @@ MIDPrimerFinder <- function(design_fasta = NULL,
 
 
 
-    if(int%%10 == 0){cat(paste0("Iteration  ", int, "\n ------- \n"))}
     # get pairs and pair.list
     pairs <- t(combn(propMIDs, m=2)) # choose 2
     pairs_list <- split(pairs, seq(nrow(pairs)))
@@ -154,6 +153,9 @@ MIDPrimerFinder <- function(design_fasta = NULL,
     passedMIDs <- propMIDs[! propMIDs %in% failedMIDs]
 
     finalMIDs <- c(passedMIDs, finalMIDs)
+
+    # update user
+    cat(paste0("There are ", int, "MIDs in the final set at iteration ", i, "\n ------- \n"))
 
   }
 
